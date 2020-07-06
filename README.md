@@ -1,6 +1,6 @@
 # Chrome extension support
 
-Basic libraries for developing Chrome extension easily.
+Basic library for developing Chrome extension easily.
 
 - Some promise wrapper of Chrome API
   - `executeScript`
