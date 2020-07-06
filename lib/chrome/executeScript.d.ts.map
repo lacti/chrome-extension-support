@@ -1,0 +1,1 @@
+{"version":3,"file":"executeScript.d.ts","sourceRoot":"","sources":["../../src/chrome/executeScript.ts"],"names":[],"mappings":"AAAA,wBAA8B,aAAa,CACzC,KAAK,EAAE,MAAM,EACb,MAAM,EAAE;IAAE,IAAI,EAAE,MAAM,CAAA;CAAE,GAAG;IAAE,IAAI,EAAE,MAAM,CAAA;CAAE,GAC1C,OAAO,CAAC,OAAO,EAAE,CAAC,CAIpB"}
