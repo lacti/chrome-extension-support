@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { deserializeError, serializeError } from "serialize-error";
 import useLogger, { Logger } from "../logger/useLogger";
 
 import executeScript from "../chrome/executeScript";
@@ -14,7 +15,8 @@ declare let _executionContext: string;
 
 interface Executed {
   executionId: string;
-  payload: unknown;
+  result?: unknown;
+  error?: unknown;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -33,11 +35,14 @@ export default function useExecutionRPC({
 
       chrome.runtime.sendMessage({
         executionId: _executionId,
-        payload: result,
+        result,
       });
     } catch (error) {
       logger.debug(_executionId, functionName, error);
-      chrome.runtime.sendMessage({ executionId: _executionId, payload: error });
+      chrome.runtime.sendMessage({
+        executionId: _executionId,
+        error: serializeError(error),
+      });
     }
   }
 
@@ -50,13 +55,13 @@ export default function useExecutionRPC({
 
   function listen() {
     chrome.runtime.onMessage.addListener(async (request) => {
-      const { executionId, payload } = request as Executed;
+      const { executionId, result, error } = request as Executed;
       logger.debug(`Listen from execution`, request);
       if (executionId && executionId in promiseMap) {
-        if (payload instanceof Error) {
-          promiseMap[executionId].reject(payload);
+        if (error !== undefined) {
+          promiseMap[executionId].reject(deserializeError(error));
         } else {
-          promiseMap[executionId].resolve(payload);
+          promiseMap[executionId].resolve(result);
         }
         delete promiseMap[executionId];
       }

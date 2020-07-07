@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { deserializeError, serializeError } from "serialize-error";
 import useLogger, { Logger } from "../logger/useLogger";
 
 import Unpromisify from "./unpromisify";
@@ -17,7 +18,8 @@ interface Invoke extends Call {
 
 interface Return extends Call {
   callId: string;
-  payload?: unknown;
+  result?: unknown;
+  error?: unknown;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -51,18 +53,18 @@ export default function useMessageRPC({
         try {
           const result = await functionMap[functionName](...payload);
           logger.debug(`Return function`, functionName, `with`, result);
-          chrome.runtime.sendMessage({ callId, payload: result });
+          chrome.runtime.sendMessage({ callId, result });
         } catch (error) {
-          chrome.runtime.sendMessage({ callId, error });
+          chrome.runtime.sendMessage({ callId, error: serializeError(error) });
           logger.debug(`Error function`, functionName, `with`, error);
         }
       } else if (callId in promiseMap) {
-        const { payload } = request as Return;
-        logger.debug(`Receive return`, callId, payload);
-        if (payload instanceof Error) {
-          promiseMap[callId].reject(payload);
+        const { result, error } = request as Return;
+        logger.debug(`Receive return`, callId, result, error);
+        if (error !== undefined) {
+          promiseMap[callId].reject(deserializeError(error));
         } else {
-          promiseMap[callId].resolve(payload);
+          promiseMap[callId].resolve(result);
           delete promiseMap[callId];
         }
       }
